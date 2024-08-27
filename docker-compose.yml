@@ -1,0 +1,63 @@
+services:
+  redis-a:
+    image: redis:6.2
+    command: >
+      sh -c "
+        redis-server /usr/local/etc/redis/redis-6379.conf &
+        redis-server /usr/local/etc/redis/redis-6380.conf &
+        sleep 5 &&
+        redis-cli --cluster create 172.20.0.2:6379 172.20.0.2:6380 172.20.0.3:6379 172.20.0.3:6380 172.20.0.4:6379 172.20.0.4:6380 --cluster-replicas 1 --cluster-yes &
+        wait
+      "
+    volumes:
+      - ./redis-6379.conf:/usr/local/etc/redis/redis-6379.conf
+      - ./redis-6380.conf:/usr/local/etc/redis/redis-6380.conf
+    ports:
+      - "6379:6379"
+      - "6380:6380"
+    networks:
+      redis-net:
+        ipv4_address: 172.20.0.2
+
+  redis-b:
+    image: redis:6.2
+    command: >
+      sh -c "
+        redis-server /usr/local/etc/redis/redis-6379.conf &
+        redis-server /usr/local/etc/redis/redis-6380.conf &
+        wait
+      "
+    volumes:
+      - ./redis-6379.conf:/usr/local/etc/redis/redis-6379.conf
+      - ./redis-6380.conf:/usr/local/etc/redis/redis-6380.conf
+    ports:
+      - "6381:6379"
+      - "6382:6380"
+    networks:
+      redis-net:
+        ipv4_address: 172.20.0.3
+
+  redis-c:
+    image: redis:6.2
+    command: >
+      sh -c "
+        redis-server /usr/local/etc/redis/redis-6379.conf &
+        redis-server /usr/local/etc/redis/redis-6380.conf &
+        wait
+      "
+    volumes:
+      - ./redis-6379.conf:/usr/local/etc/redis/redis-6379.conf
+      - ./redis-6380.conf:/usr/local/etc/redis/redis-6380.conf
+    ports:
+      - "6383:6379"
+      - "6384:6380"
+    networks:
+      redis-net:
+        ipv4_address: 172.20.0.4
+
+networks:
+  redis-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
